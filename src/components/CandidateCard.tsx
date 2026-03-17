@@ -1,19 +1,28 @@
 import { Chessboard } from 'react-chessboard'
-import { useStockfish } from '../hooks/useStockfish'
-import { useLichessStats } from '../hooks/useLichessStats'
 import { MetricsPanel } from './MetricsPanel'
 import type { CandidateMove } from '../hooks/useABSelection'
+import type { StockfishState } from '../hooks/useStockfish'
+import type { LichessStatsState } from '../hooks/useLichessStats'
 
 export interface CandidateCardProps {
   label: 'A' | 'B'
   candidate: CandidateMove | null
+  eval_: StockfishState
+  lichess: LichessStatsState
 }
 
-/** Inner component — hooks are only mounted when a candidate is present. */
-function CandidateCardInner({ label, candidate }: { label: 'A' | 'B'; candidate: CandidateMove }) {
-  const eval_ = useStockfish(candidate.fen)
-  const lichess = useLichessStats(candidate.fen)
-
+/** Inner component — only rendered when a candidate is present. */
+function CandidateCardInner({
+  label,
+  candidate,
+  eval_,
+  lichess,
+}: {
+  label: 'A' | 'B'
+  candidate: CandidateMove
+  eval_: StockfishState
+  lichess: LichessStatsState
+}) {
   const accentText = label === 'A' ? 'text-blue-700' : 'text-orange-700'
   const accentBadge =
     label === 'A'
@@ -48,7 +57,7 @@ function CandidateCardInner({ label, candidate }: { label: 'A' | 'B'; candidate:
  * Displays a mini read-only board and metrics for one A/B candidate move.
  * Shows a placeholder when no candidate has been selected yet.
  */
-export function CandidateCard({ label, candidate }: CandidateCardProps) {
+export function CandidateCard({ label, candidate, eval_, lichess }: CandidateCardProps) {
   const borderColor = label === 'A' ? 'border-blue-300' : 'border-orange-300'
   const bgColor = label === 'A' ? 'bg-blue-50' : 'bg-orange-50'
   const accentText = label === 'A' ? 'text-blue-400' : 'text-orange-400'
@@ -56,7 +65,7 @@ export function CandidateCard({ label, candidate }: CandidateCardProps) {
   return (
     <div className={`rounded-lg border-2 ${borderColor} ${bgColor} p-4`}>
       {candidate ? (
-        <CandidateCardInner label={label} candidate={candidate} />
+        <CandidateCardInner label={label} candidate={candidate} eval_={eval_} lichess={lichess} />
       ) : (
         <div className="flex flex-col items-center justify-center py-10 gap-2">
           <span className={`text-3xl font-black ${accentText}`}>{label}</span>

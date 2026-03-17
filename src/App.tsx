@@ -47,7 +47,7 @@ export default function App() {
 
         {/* A/B candidate comparison — shown whenever A/B mode is active */}
         {ab.isABMode && (
-          <ABTestPanel moveA={ab.moveA} moveB={ab.moveB} />
+          <ABTestPanel moveA={ab.moveA} moveB={ab.moveB} currentFen={game.fen} />
         )}
       </main>
     </div>

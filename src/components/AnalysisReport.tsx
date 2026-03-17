@@ -103,7 +103,7 @@ function buildRecommendation(
   const loading = evalA.loading || evalB.loading || lichessA.loading || lichessB.loading
 
   if (loading) {
-    return 'Analysis in progress — waiting for engine and opening data…'
+    return 'Analysis in progress…'
   }
 
   if (engineFavors && statFavors && engineFavors === statFavors) {
@@ -156,6 +156,8 @@ export function AnalysisReport({
     ? twoProportionZTest(la.black, totalA, lb.black, totalB)
     : null
 
+  const loading = evalA.loading || evalB.loading || lichessA.loading || lichessB.loading
+
   const recommendation = buildRecommendation(
     evalA, evalB, lichessA, lichessB, sideToMove, moveA, moveB,
   )
@@ -196,41 +198,54 @@ export function AnalysisReport({
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 mt-4">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">Statistical Analysis</h2>
 
-      {/* Delta table */}
-      <div className="overflow-x-auto mb-5">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-200 text-left text-gray-500 text-xs uppercase tracking-wide">
-              <th className="pb-2 font-medium w-32">Metric</th>
-              <th className="pb-2 font-medium text-blue-600">Move A ({moveA.san})</th>
-              <th className="pb-2 font-medium text-orange-600">Move B ({moveB.san})</th>
-              <th className="pb-2 font-medium text-gray-600">Δ (B−A)</th>
-              <th className="pb-2 font-medium text-gray-600">Sig.</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.metric} className="border-b border-gray-100 last:border-0">
-                <td className="py-2 text-gray-700 font-medium">{row.metric}</td>
-                <td className="py-2 font-mono text-gray-800">{row.a}</td>
-                <td className="py-2 font-mono text-gray-800">{row.b}</td>
-                <td className={`py-2 font-mono font-semibold ${
-                  row.delta.startsWith('+') ? 'text-green-600' :
-                  row.delta.startsWith('-') ? 'text-red-500' : 'text-gray-400'
-                }`}>{row.delta}</td>
-                <td className="py-2 font-mono text-purple-600 font-semibold">{row.sig || '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="text-xs text-gray-400 mt-1">* p&lt;0.05 &nbsp; ** p&lt;0.01 (two-proportion z-test)</p>
-      </div>
+      {loading ? (
+        /* Skeleton while engine / Lichess data is still loading */
+        <div className="animate-pulse space-y-3">
+          <div className="h-4 bg-gray-200 rounded w-full" />
+          <div className="h-4 bg-gray-200 rounded w-5/6" />
+          <div className="h-4 bg-gray-200 rounded w-4/6" />
+          <div className="h-4 bg-gray-200 rounded w-5/6" />
+          <div className="mt-4 h-14 bg-indigo-100 rounded-md" />
+        </div>
+      ) : (
+        <>
+          {/* Delta table */}
+          <div className="overflow-x-auto mb-5">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 text-left text-gray-500 text-xs uppercase tracking-wide">
+                  <th className="pb-2 font-medium w-32">Metric</th>
+                  <th className="pb-2 font-medium text-blue-600">Move A ({moveA.san})</th>
+                  <th className="pb-2 font-medium text-orange-600">Move B ({moveB.san})</th>
+                  <th className="pb-2 font-medium text-gray-600">Δ (B−A)</th>
+                  <th className="pb-2 font-medium text-gray-600">Sig.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.metric} className="border-b border-gray-100 last:border-0">
+                    <td className="py-2 text-gray-700 font-medium">{row.metric}</td>
+                    <td className="py-2 font-mono text-gray-800">{row.a}</td>
+                    <td className="py-2 font-mono text-gray-800">{row.b}</td>
+                    <td className={`py-2 font-mono font-semibold ${
+                      row.delta.startsWith('+') ? 'text-green-600' :
+                      row.delta.startsWith('-') ? 'text-red-500' : 'text-gray-400'
+                    }`}>{row.delta}</td>
+                    <td className="py-2 font-mono text-purple-600 font-semibold">{row.sig || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="text-xs text-gray-400 mt-1">* p&lt;0.05 &nbsp; ** p&lt;0.01 (two-proportion z-test)</p>
+          </div>
 
-      {/* Plain-English recommendation */}
-      <div className="bg-indigo-50 border border-indigo-200 rounded-md px-4 py-3">
-        <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-1">Recommendation</p>
-        <p className="text-sm text-indigo-900">{recommendation}</p>
-      </div>
+          {/* Plain-English recommendation */}
+          <div className="bg-indigo-50 border border-indigo-200 rounded-md px-4 py-3">
+            <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-1">Recommendation</p>
+            <p className="text-sm text-indigo-900">{recommendation}</p>
+          </div>
+        </>
+      )}
     </div>
   )
 }

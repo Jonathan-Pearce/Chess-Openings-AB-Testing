@@ -28,6 +28,16 @@ function formatLabel(score: number | null, mate: number | null): string {
  * The numeric score is shown to the right.
  */
 export function EvalBar({ score, mate, loading }: EvalBarProps) {
+  // Show a pulse skeleton while the engine hasn't returned a result yet.
+  if (loading && score === null && mate === null) {
+    return (
+      <div className="flex items-center gap-2 animate-pulse">
+        <div className="w-5 rounded bg-gray-300" style={{ height: '140px' }} />
+        <div className="h-4 w-10 bg-gray-200 rounded" />
+      </div>
+    )
+  }
+
   // Determine the white-fill percentage (0 = fully black winning, 100 = fully white winning)
   let whitePercent: number
   if (mate !== null) {
@@ -38,7 +48,7 @@ export function EvalBar({ score, mate, loading }: EvalBarProps) {
     whitePercent = 50
   }
 
-  const label = loading ? '…' : formatLabel(score, mate)
+  const label = formatLabel(score, mate)
   const isWhiteAhead = whitePercent >= 50
 
   return (
@@ -51,7 +61,7 @@ export function EvalBar({ score, mate, loading }: EvalBarProps) {
       >
         {/* White fill grows from the bottom */}
         <div
-          className="absolute bottom-0 left-0 right-0 bg-gray-100 transition-all duration-500"
+          className={`absolute bottom-0 left-0 right-0 bg-gray-100 ${loading ? '' : 'transition-all duration-500'}`}
           style={{ height: `${whitePercent}%` }}
         />
       </div>
@@ -66,7 +76,7 @@ export function EvalBar({ score, mate, loading }: EvalBarProps) {
               : 'text-gray-500'
         }`}
       >
-        {label}
+        {loading ? '…' : label}
       </span>
     </div>
   )

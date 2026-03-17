@@ -3,8 +3,7 @@ import { useStockfish } from './hooks/useStockfish';
 import { useLichessStats } from './hooks/useLichessStats';
 import { BoardPanel } from './components/BoardPanel';
 import { PositionInput } from './components/PositionInput';
-import { EvalBar } from './components/EvalBar';
-import { OpeningStats } from './components/OpeningStats';
+import { MetricsPanel } from './components/MetricsPanel';
 
 export default function App() {
   const game = useChessGame();
@@ -30,31 +29,7 @@ export default function App() {
         <div className="w-full lg:w-80 flex flex-col gap-4">
           <PositionInput game={game} />
 
-          {/* Phase 3 — Stockfish evaluation */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">Engine Evaluation</h2>
-            <EvalBar
-              score={eval_.score}
-              mate={eval_.mate}
-              loading={eval_.loading}
-            />
-            {eval_.bestMove && !eval_.loading && (
-              <p className="mt-2 text-xs text-gray-500">
-                Best move: <span className="font-mono font-medium text-gray-700">{eval_.bestMove}</span>
-                {' '}(depth {eval_.depth})
-              </p>
-            )}
-          </div>
-
-          {/* Phase 4 — Lichess opening stats */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">Opening Statistics</h2>
-            <OpeningStats
-              data={lichess.data}
-              loading={lichess.loading}
-              error={lichess.error}
-            />
-          </div>
+          <MetricsPanel eval_={eval_} lichess={lichess} />
         </div>
       </main>
     </div>

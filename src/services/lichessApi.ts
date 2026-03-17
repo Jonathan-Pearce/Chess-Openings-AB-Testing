@@ -45,16 +45,19 @@ export async function fetchLichessStats(
   const url =
     `${BASE_URL}` +
     `?variant=standard` +
-    `&speeds=blitz&speeds=rapid&speeds=classical` +
-    `&ratings=2000&ratings=2200&ratings=2500` +
+    `&speeds=blitz,rapid,classical` +
+    `&ratings=2000,2200,2500` +
     `&fen=${encodeURIComponent(fen)}`
 
   console.debug('[lichessApi] GET', url)
 
-  const response = await fetch(url, {
-    signal,
-    headers: { Accept: 'application/json' },
-  })
+  const headers: Record<string, string> = { Accept: 'application/json' }
+  const token = import.meta.env.VITE_LICHESS_TOKEN
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const response = await fetch(url, { signal, headers })
 
   if (!response.ok) {
     throw new Error(`Lichess API error: ${response.status} ${response.statusText}`)

@@ -1,12 +1,15 @@
 import { useChessGame } from './hooks/useChessGame';
 import { useStockfish } from './hooks/useStockfish';
+import { useLichessStats } from './hooks/useLichessStats';
 import { BoardPanel } from './components/BoardPanel';
 import { PositionInput } from './components/PositionInput';
 import { EvalBar } from './components/EvalBar';
+import { OpeningStats } from './components/OpeningStats';
 
 export default function App() {
   const game = useChessGame();
   const eval_ = useStockfish(game.fen);
+  const lichess = useLichessStats(game.fen);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -41,6 +44,16 @@ export default function App() {
                 {' '}(depth {eval_.depth})
               </p>
             )}
+          </div>
+
+          {/* Phase 4 — Lichess opening stats */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">Opening Statistics</h2>
+            <OpeningStats
+              data={lichess.data}
+              loading={lichess.loading}
+              error={lichess.error}
+            />
           </div>
         </div>
       </main>

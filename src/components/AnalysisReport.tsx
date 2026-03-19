@@ -163,14 +163,29 @@ export function AnalysisReport({
   )
 
   type Row = { metric: string; a: string; b: string; delta: string; sig: string }
-  const rows: Row[] = [
-    {
-      metric: 'Engine Eval',
-      a: cpStr(evalA.score, evalA.mate),
-      b: cpStr(evalB.score, evalB.mate),
-      delta: cpDelta(evalA.score, evalB.score),
+
+  // Engine eval rows: depth 3, 7, 11, then final depth
+  const engineRows: Row[] = [3, 7, 11].map((d) => {
+    const snapA = evalA.depthResults[d]
+    const snapB = evalB.depthResults[d]
+    return {
+      metric: `Engine Eval (d${d})`,
+      a: snapA ? cpStr(snapA.score, snapA.mate) : '—',
+      b: snapB ? cpStr(snapB.score, snapB.mate) : '—',
+      delta: snapA && snapB ? cpDelta(snapA.score, snapB.score) : '—',
       sig: '',
-    },
+    }
+  })
+  engineRows.push({
+    metric: `Engine Eval (d${evalA.depth || 18})`,
+    a: cpStr(evalA.score, evalA.mate),
+    b: cpStr(evalB.score, evalB.mate),
+    delta: cpDelta(evalA.score, evalB.score),
+    sig: '',
+  })
+
+  const rows: Row[] = [
+    ...engineRows,
     {
       metric: 'White Wins',
       a: la ? pctStr(la.white, totalA) : '—',

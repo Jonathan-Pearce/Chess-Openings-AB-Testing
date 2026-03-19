@@ -2,6 +2,7 @@ export interface EvalBarProps {
   score: number | null
   mate: number | null
   loading: boolean
+  horizontal?: boolean
 }
 
 /** Clamp cp to [-CLAMP, CLAMP] then map to a 0–100 percentage for the bar. */
@@ -24,13 +25,19 @@ function formatLabel(score: number | null, mate: number | null): string {
 }
 
 /**
- * Vertical evaluation bar: white fills from the bottom, black from the top.
- * The numeric score is shown to the right.
+ * Evaluation bar.
+ * - Default (vertical): tall narrow bar, white fills from bottom.
+ * - Horizontal: short wide bar, white fills from left.
  */
-export function EvalBar({ score, mate, loading }: EvalBarProps) {
+export function EvalBar({ score, mate, loading, horizontal = false }: EvalBarProps) {
   // Show a pulse skeleton while the engine hasn't returned a result yet.
   if (loading && score === null && mate === null) {
-    return (
+    return horizontal ? (
+      <div className="flex items-center gap-2 animate-pulse">
+        <div className="h-4 rounded bg-gray-300 flex-1" />
+        <div className="h-4 w-10 bg-gray-200 rounded" />
+      </div>
+    ) : (
       <div className="flex items-center gap-2 animate-pulse">
         <div className="w-5 rounded bg-gray-300" style={{ height: '140px' }} />
         <div className="h-4 w-10 bg-gray-200 rounded" />
@@ -51,6 +58,34 @@ export function EvalBar({ score, mate, loading }: EvalBarProps) {
   const label = formatLabel(score, mate)
   const isWhiteAhead = whitePercent >= 50
 
+  if (horizontal) {
+    return (
+      <div className="flex items-center gap-2">
+        {/* Wide, short bar — white fills from the left */}
+        <div
+          className="relative flex-1 h-4 rounded overflow-hidden bg-gray-800"
+          title={`Stockfish eval: ${label}`}
+        >
+          {/* White fill */}
+          <div
+            className={`absolute top-0 left-0 bottom-0 bg-gray-100 ${loading ? '' : 'transition-all duration-500'}`}
+            style={{ width: `${whitePercent}%` }}
+          />
+          {/* Centre line (eval = 0) */}
+          <div className="absolute top-0 bottom-0 w-px bg-gray-400/70" style={{ left: '50%' }} />
+          {/* Numeric label centred inside the bar */}
+          <span
+            className={`absolute inset-0 flex items-center justify-center text-xs font-mono font-bold tabular-nums mix-blend-difference ${
+              loading ? 'text-gray-400' : 'text-white'
+            }`}
+          >
+            {loading ? '…' : label}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex items-center gap-2">
       {/* Bar */}
@@ -64,6 +99,8 @@ export function EvalBar({ score, mate, loading }: EvalBarProps) {
           className={`absolute bottom-0 left-0 right-0 bg-gray-100 ${loading ? '' : 'transition-all duration-500'}`}
           style={{ height: `${whitePercent}%` }}
         />
+        {/* Centre line (eval = 0) */}
+        <div className="absolute left-0 right-0 h-px bg-gray-400/70" style={{ top: '50%' }} />
       </div>
 
       {/* Numeric label */}

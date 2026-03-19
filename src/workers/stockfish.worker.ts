@@ -20,6 +20,9 @@ export interface EvalResult {
 
 export type EvalCallback = (result: EvalResult) => void;
 
+/** Called progressively each time a checkpoint depth is reached mid-search. */
+export type CheckpointCallback = (result: EvalResult) => void;
+
 export class StockfishWorker {
   private readonly worker: Worker;
   private ready = false;
@@ -31,8 +34,11 @@ export class StockfishWorker {
   /** Queued evaluation to run as soon as the engine signals readyok. */
   private pendingFen: string | null = null;
   private pendingDepth = 18;
+  private pendingCheckpoints: number[] = [];
 
   private callback: EvalCallback | null = null;
+  private checkpointDepths: Set<number> = new Set();
+  private checkpointCallback: CheckpointCallback | null = null;
 
   /**
    * @param baseUrl  Value of `import.meta.env.BASE_URL` — ensures the correct
@@ -54,8 +60,9 @@ export class StockfishWorker {
     if (line === 'readyok') {
       this.ready = true
       if (this.pendingFen !== null) {
-        this.startSearch(this.pendingFen, this.pendingDepth)
+        this.startSearch(this.pendingFen, this.pendingDepth, this.pendingCheckpoints)
         this.pendingFen = null
+        this.pendingCheckpoints = []
       }
       return
     }
@@ -75,6 +82,10 @@ export class StockfishWorker {
             mate: mateMatch ? parseInt(mateMatch[1], 10) : null,
             bestMove: pvMatch ? pvMatch[1] : (this.partial.bestMove ?? null),
           }
+          // Fire checkpoint callback if this depth is one of the requested milestones.
+          if (this.checkpointDepths.has(depth) && this.checkpointCallback) {
+            this.checkpointCallback({ ...this.partial } as EvalResult)
+          }
         }
       }
       return
@@ -93,7 +104,8 @@ export class StockfishWorker {
     }
   }
 
-  private startSearch(fen: string, depth: number): void {
+  private startSearch(fen: string, depth: number, checkpoints: number[] = []): void {
+    this.checkpointDepths = new Set(checkpoints)
     if (this.analyzing) {
       this.worker.postMessage('stop')
     }
@@ -108,13 +120,21 @@ export class StockfishWorker {
    * If called while a previous search is running, that search is stopped first.
    * If the engine is not yet ready, the request is queued.
    */
-  evaluate(fen: string, depth: number, callback: EvalCallback): void {
+  evaluate(
+    fen: string,
+    depth: number,
+    callback: EvalCallback,
+    checkpointDepths: number[] = [],
+    checkpointCallback?: CheckpointCallback,
+  ): void {
     this.callback = callback
+    this.checkpointCallback = checkpointCallback ?? null
     if (!this.ready) {
       this.pendingFen = fen
       this.pendingDepth = depth
+      this.pendingCheckpoints = checkpointDepths
     } else {
-      this.startSearch(fen, depth)
+      this.startSearch(fen, depth, checkpointDepths)
     }
   }
 
